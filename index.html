@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🍎 苹果接龙 - HSK Level 1 中文学习反应力游戏</title>
+    <style>
+        :root {
+            --sky-top: #87CEEB;
+            --sky-bottom: #e0f0ff;
+            --apple-red: #e74c3c;
+            --apple-red-dark: #c0392b;
+            --text-dark: #2c3e50;
+            --gold: #f39c12;
+            --white: #fff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        body {
+            font-family: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #c9e8f7 30%, #e8f4e8 60%, #d4e8c2 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(ellipse at 15% 85%, rgba(255,255,255,0.5) 0%, transparent 60%),
+                        radial-gradient(ellipse at 75% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 10%, rgba(255,255,200,0.4) 0%, transparent 55%);
+        }
+        .cloud {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: cloudFloat linear infinite;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .cloud-1 { width: 80px; height: 40px; top: 8%; left: -100px; animation-duration: 35s; border-radius: 40px; }
+        .cloud-1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .cloud-1::after { width: 35px; height: 35px; top: -12px; left: 45px; }
+        .cloud-2 { width: 60px; height: 30px; top: 15%; left: -80px; animation-duration: 28s; animation-delay: -10s; border-radius: 30px; }
+        .cloud-2::before { width: 38px; height: 38px; top: -20px; left: 10px; }
+        .cloud-2::after { width: 28px; height: 28px; top: -8px; left: 35px; }
+        .cloud-3 { width: 70px; height: 35px; top: 5%; left: -90px; animation-duration: 40s; animation-delay: -20s; border-radius: 35px; opacity: 0.5; }
+        .cloud-3::before { width: 44px; height: 44px; top: -22px; left: 12px; }
+        .cloud-3::after { width: 30px; height: 30px; top: -10px; left: 40px; }
+        @keyframes cloudFloat {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(100vw + 200px)); }
+        }
+        .game-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 800px;
+            height: 95vh;
+            height: 95dvh;
+            max-height: 750px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.7);
+            border-bottom: 2px solid rgba(255,255,255,0.8);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .info-item { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 600; color: #3d3d3d; white-space: nowrap; }
+        .info-item .icon { font-size: 1.3rem; }
+        .info-value { color: #e74c3c; font-weight: 700; font-size: 1.1rem; min-width: 30px; text-align: center; }
+        .round-indicator {
+            background: #fef3c7; padding: 4px 12px; border-radius: 20px; font-weight: 700;
+            color: #b45309; font-size: 0.9rem; border: 1.5px solid #fcd34d;
+        }
+        .game-area {
+            flex: 1; position: relative; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; overflow: hidden;
+            cursor: pointer; min-height: 400px;
+        }
+        .target-word-area {
+            position: relative; z-index: 10; margin-top: 8px; padding: 8px 24px;
+            background: rgba(255,255,255,0.85); border-radius: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1); border: 2px solid #ffeaa7;
+            text-align: center; flex-shrink: 0;
+        }
+        .target-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        .target-word { font-size: 2rem; font-weight: 800; color: #2d3436; letter-spacing: 1px; line-height: 1.2; }
+        @media (max-width: 600px) {
+            .target-word { font-size: 1.4rem; }
+            .target-word-area { padding: 6px 16px; margin-top: 4px; }
+        }
+        .tree-area {
+            position: relative; width: 90%; max-width: 650px; flex: 1;
+            display: flex; align-items: flex-start; justify-content: center;
+            min-height: 280px; z-index: 5;
+        }
+        .tree {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 2; pointer-events: none;
+        }
+        .tree-crown { position: relative; width: 240px; height: 180px; }
+        @media (max-width: 600px) { .tree-crown { width: 170px; height: 130px; } }
+        .tree-crown .blob {
+            position: absolute;
+            background: radial-gradient(ellipse at 40% 35%, #5db84d 0%, #3d8b30 60%, #2d6b24 100%);
+            border-radius: 50%;
+            box-shadow: inset 0 -8px 20px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .blob-main { width: 180px; height: 140px; top: 10px; left: 30px; }
+        .blob-left { width: 110px; height: 100px; top: 35px; left: -10px; }
+        .blob-right { width: 105px; height: 95px; top: 30px; right: -5px; left: auto; }
+        .blob-top { width: 90px; height: 70px; top: -10px; left: 65px; }
+        @media (max-width: 600px) {
+            .blob-main { width: 130px; height: 100px; top: 8px; left: 20px; }
+            .blob-left { width: 80px; height: 72px; top: 26px; left: -8px; }
+            .blob-right { width: 76px; height: 68px; top: 22px; right: -4px; left: auto; }
+            .blob-top { width: 65px; height: 50px; top: -6px; left: 48px; }
+        }
+        .tree-trunk {
+            width: 32px; height: 50px;
+            background: linear-gradient(180deg, #a0724a 0%, #8B5A2B 40%, #6B3F1F 100%);
+            border-radius: 6px 6px 12px 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-top: -8px; z-index: -1;
+        }
+        @media (max-width: 600px) { .tree-trunk { width: 24px; height: 36px; } }
+        .apples-container {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 6;
+        }
+        .apple {
+            position: absolute; width: 56px; height: 62px;
+            border-radius: 50% 50% 48% 48%;
+            background: radial-gradient(ellipse at 35% 28%, #ff6b6b 0%, #e74c3c 40%, #c0392b 85%, #a93226 100%);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.2);
+            cursor: default; transition: transform 0.15s ease-out;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 6; pointer-events: auto;
+        }
+        .apple:hover {
+            transform: scale(1.06);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.35), inset 0 -4px 8px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.2);
+        }
+        @media (max-width: 600px) { .apple { width: 42px; height: 46px; } }
+        .apple .apple-text {
+            font-size: 0.85rem; font-weight: 700; color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5); letter-spacing: 1px;
+            text-align: center; line-height: 1.1; z-index: 1;
+            pointer-events: none; word-break: keep-all;
+        }
+        @media (max-width: 600px) { .apple .apple-text { font-size: 0.7rem; } }
+        .apple::before {
+            content: ''; position: absolute; top: -10px; left: 50%;
+            transform: translateX(-50%); width: 5px; height: 14px;
+            background: #5d8c3c; border-radius: 3px 3px 0 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 0;
+        }
+        @media (max-width: 600px) { .apple::before { top: -7px; width: 4px; height: 10px; } }
+        .apple::after {
+            content: ''; position: absolute; top: -8px; left: 58%;
+            width: 14px; height: 8px; background: #6aad3d;
+            border-radius: 2px 60% 2px 50%; transform: rotate(-20deg); z-index: 0;
+        }
+        @media (max-width: 600px) { .apple::after { top: -5px; width: 10px; height: 6px; left: 56%; } }
+        .apple.falling {
+            z-index: 15 !important; animation: none !important; transition: none !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 -4px 8px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.2) !important;
+        }
+        .apple.wobble { animation: wobble 0.4s ease-in-out !important; }
+        @keyframes wobble {
+            0%,100% { transform: rotate(0deg); }
+            15% { transform: rotate(-8deg); }
+            30% { transform: rotate(7deg); }
+            50% { transform: rotate(-5deg); }
+            70% { transform: rotate(3deg); }
+            85% { transform: rotate(-2deg); }
+        }
+        .box-zone { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 20; pointer-events: none; }
+        @media (max-width: 600px) { .box-zone { bottom: 12px; } }
+        .box-container { position: relative; width: 420px; height: 70px; pointer-events: none; }
+        @media (max-width: 700px) { .box-container { width: 300px; height: 55px; } }
+        @media (max-width: 450px) { .box-container { width: 240px; height: 48px; } }
+        .box-body {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 55px;
+            background: linear-gradient(180deg, #d4a870 0%, #b8773d 30%, #9c5e2e 70%, #7a4220 100%);
+            border-radius: 10px 10px 16px 16px; border: 4px solid #6B3F1F;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3), inset 0 3px 0 rgba(255,255,255,0.15);
+            overflow: hidden; z-index: 21;
+        }
+        @media (max-width: 700px) { .box-body { height: 42px; border-radius: 8px 8px 12px 12px; border-width: 3px; } }
+        @media (max-width: 450px) { .box-body { height: 36px; border-radius: 6px 6px 10px 10px; border-width: 2.5px; } }
+        .box-inner-visual {
+            position: absolute; top: 8px; left: 12px; right: 12px; bottom: 8px;
+            background: #3d1f0f; border-radius: 4px; transition: background 0.2s ease; z-index: 20;
+        }
+        @media (max-width: 700px) { .box-inner-visual { top: 6px; left: 8px; right: 8px; bottom: 6px; } }
+        .box-container.open .box-inner-visual {
+            background: #f5e6d3; box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .box-lid {
+            position: absolute; bottom: 52px; left: -6px; right: -6px; height: 22px;
+            background: linear-gradient(180deg, #c89460 0%, #9c6b3d 60%, #7a4e28 100%);
+            border-radius: 12px 12px 4px 4px; border: 4px solid #6B3F1F; border-bottom: none;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.2); z-index: 25;
+            transition: transform 0.15s ease-out, bottom 0.15s ease-out;
+            transform-origin: bottom center;
+        }
+        @media (max-width: 700px) { .box-lid { bottom: 40px; height: 17px; left: -5px; right: -5px; border-width: 3px; } }
+        @media (max-width: 450px) { .box-lid { bottom: 34px; height: 14px; left: -4px; right: -4px; border-width: 2.5px; } }
+        .box-container.open .box-lid {
+            transform: rotateX(-75deg) translateY(-18px); bottom: 56px;
+            box-shadow: 0 -8px 20px rgba(0,0,0,0.3);
+        }
+        @media (max-width: 700px) { .box-container.open .box-lid { transform: rotateX(-75deg) translateY(-14px); bottom: 44px; } }
+        @media (max-width: 450px) { .box-container.open .box-lid { transform: rotateX(-75deg) translateY(-10px); bottom: 38px; } }
+        .hint-text {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+            font-size: 0.85rem; color: #666; font-weight: 500; pointer-events: none;
+            z-index: 30; text-align: center; transition: opacity 0.3s; letter-spacing: 1px; white-space: nowrap;
+        }
+        @media (max-width: 600px) { .hint-text { bottom: 80px; font-size: 0.7rem; } }
+        .particle {
+            position: absolute; pointer-events: none; z-index: 40; font-size: 1.2rem;
+            animation: particleBurst 0.7s ease-out forwards;
+        }
+        @keyframes particleBurst {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.3); }
+        }
+        .flash-overlay {
+            position: absolute; inset: 0; pointer-events: none; z-index: 35;
+            border-radius: 28px; opacity: 0; transition: opacity 0.1s ease;
+        }
+        .flash-overlay.good { background: rgba(46,204,113,0.3); opacity: 1; transition: opacity 0s; }
+        .flash-overlay.bad { background: rgba(231,76,60,0.35); opacity: 1; transition: opacity 0s; }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: #fff; border-radius: 24px; padding: 30px 26px;
+            max-width: 460px; width: 90%; text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh; overflow-y: auto;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal h2 { font-size: 1.8rem; margin-bottom: 8px; color: #2c3e50; }
+        .modal .result-icon { font-size: 4rem; display: block; margin: 0 auto 10px; }
+        .modal .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0; }
+        .modal .stat-card { background: #f9f9f9; border-radius: 16px; padding: 14px 8px; border: 2px solid #eee; }
+        .modal .stat-value { font-size: 1.8rem; font-weight: 800; color: #e74c3c; }
+        .modal .stat-label { font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .modal .grade { font-size: 2.5rem; font-weight: 900; margin: 6px 0; }
+        .btn {
+            display: inline-block; padding: 12px 32px; font-size: 1.1rem; font-weight: 700;
+            border: none; border-radius: 30px; cursor: pointer; letter-spacing: 1px;
+            transition: all 0.2s; touch-action: manipulation; min-height: 48px; min-width: 120px;
+        }
+        .btn-primary { background: #e74c3c; color: #fff; box-shadow: 0 6px 20px rgba(231,76,60,0.4); }
+        .btn-primary:hover { background: #c0392b; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(231,76,60,0.5); }
+        .btn-secondary { background: #fff; color: #e74c3c; border: 2px solid #e74c3c; margin-left: 10px; }
+        .btn-secondary:hover { background: #fef5f5; }
+        .btn:active { transform: scale(0.95); }
+        .setup-panel {
+            position: absolute; inset: 0; z-index: 90; background: rgba(255,255,255,0.95);
+            border-radius: 28px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px; gap: 16px;
+        }
+        .setup-panel h2 { font-size: 1.6rem; color: #2c3e50; margin-bottom: 4px; }
+        .setup-panel .subtitle { font-size: 0.85rem; color: #888; margin-bottom: 8px; }
+        .setup-option {
+            display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+            background: #f8f8f8; border-radius: 16px; cursor: pointer; border: 3px solid transparent;
+            transition: all 0.2s; width: 100%; max-width: 400px; font-weight: 600; font-size: 0.95rem;
+        }
+        .setup-option.selected { border-color: #e74c3c; background: #fef5f5; }
+        .setup-option input[type="radio"] { accent-color: #e74c3c; width: 20px; height: 20px; }
+        .custom-input-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 6px; }
+        .custom-input-area textarea {
+            width: 100%; height: 120px; border: 2px solid #ddd; border-radius: 12px;
+            padding: 12px; font-size: 0.9rem; font-family: inherit; resize: vertical; line-height: 1.5;
+        }
+        .custom-input-area .hint { font-size: 0.7rem; color: #999; text-align: left; }
+        @media (max-width: 600px) {
+            .game-wrapper { height: 98vh; height: 98dvh; max-height: none; border-radius: 16px; border-width: 1.5px; }
+            .top-bar { padding: 6px 12px; gap: 4px; }
+            .info-item { font-size: 0.75rem; }
+            .info-value { font-size: 0.85rem; }
+            .round-indicator { font-size: 0.7rem; padding: 3px 8px; }
+            .box-container { width: 260px; height: 48px; }
+            .box-body { height: 38px; border-radius: 7px 7px 10px 10px; }
+            .box-lid { bottom: 36px; height: 15px; left: -4px; right: -4px; }
+            .box-container.open .box-lid { bottom: 40px; transform: rotateX(-70deg) translateY(-10px); }
+            .hint-text { bottom: 70px; font-size: 0.7rem; }
+            .modal { padding: 20px 16px; border-radius: 18px; }
+            .modal h2 { font-size: 1.4rem; }
+            .modal .stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+            .modal .stat-value { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="game-wrapper" id="gameWrapper">
+        <div class="top-bar">
+            <div class="info-item"><span class="icon">⭐</span>得分：<span class="info-value" id="scoreDisplay">0</span></div>
+            <div class="round-indicator" id="roundIndicator">第 1 / 10 轮</div>
+            <div class="info-item"><span class="icon">✅</span>正确：<span class="info-value" id="correctDisplay">0</span></div>
+        </div>
+        <div class="game-area" id="gameArea">
+            <div class="target-word-area" id="targetWordArea">
+                <div class="target-label">🔍 找到对应的中文词语</div>
+                <div class="target-word" id="targetWord">—</div>
+            </div>
+            <div class="tree-area" id="treeArea">
+                <div class="tree" id="tree">
+                    <div class="tree-crown">
+                        <div class="blob blob-main"></div>
+                        <div class="blob blob-left"></div>
+                        <div class="blob blob-right"></div>
+                        <div class="blob blob-top"></div>
+                    </div>
+                    <div class="tree-trunk"></div>
+                </div>
+                <div class="apples-container" id="applesContainer"></div>
+            </div>
+            <div class="hint-text" id="hintText">💡 按 <b>空格键</b> 或 <b>点击屏幕</b> 打开盒子接苹果</div>
+            <div class="box-zone" id="boxZone">
+                <div class="box-container" id="boxContainer">
+                    <div class="box-lid"></div>
+                    <div class="box-body">
+                        <div class="box-inner-visual"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flash-overlay" id="flashOverlay"></div>
+        </div>
+        <div class="setup-panel" id="setupPanel">
+            <h2>🍎 苹果接龙</h2>
+            <p class="subtitle">HSK Level 1 中文词语反应力游戏</p>
+            <label class="setup-option selected" id="optionPreset">
+                <input type="radio" name="quizSource" value="preset" checked>
+                📚 使用预设 HSK Level 1 题库
+            </label>
+            <label class="setup-option" id="optionCustom">
+                <input type="radio" name="quizSource" value="custom">
+                ✏️ 自定义题库（老师输入）
+            </label>
+            <div class="custom-input-area" id="customInputArea" style="display:none;">
+                <textarea id="customVocabInput" placeholder="每行输入一个词语，格式：&#10;中文词语,英文意思&#10;例如：&#10;苹果,apple&#10;老师,teacher&#10;学生,student&#10;&#10;至少输入7个词语（用于生成选项）"></textarea>
+                <span class="hint">📝 至少输入7个词语，选项将自动从其他词语中生成</span>
+            </div>
+            <button class="btn btn-primary" id="btnStartGame" style="margin-top:8px;">🎮 开始游戏</button>
+        </div>
+    </div>
+    <div class="modal-overlay" id="resultModal" style="display:none;">
+        <div class="modal">
+            <span class="result-icon" id="resultIcon">🏆</span>
+            <h2>游戏结束！</h2>
+            <div class="grade" id="resultGrade"></div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="resultScore">0</div>
+                    <div class="stat-label">总得分</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="resultCorrect">0/10</div>
+                    <div class="stat-label">正确数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="resultAccuracy">0%</div>
+                    <div class="stat-label">正确率</div>
+                </div>
+            </div>
+            <div style="margin-top:6px;font-size:0.85rem;color:#888;" id="resultAvgSpeed"></div>
+            <div style="margin-top:16px;">
+                <button class="btn btn-primary" id="btnReplay">🔄 再来一局</button>
+                <button class="btn btn-secondary" id="btnBackToSetup">⚙️ 重新设置</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const HSK1_VOCABULARY = [
+                { en: 'love', zh: '爱' }, { en: 'eight', zh: '八' }, { en: 'dad', zh: '爸爸' },
+                { en: 'cup', zh: '杯子' }, { en: 'Beijing', zh: '北京' }, { en: 'book', zh: '书' },
+                { en: 'not', zh: '不' }, { en: 'vegetable', zh: '菜' }, { en: 'tea', zh: '茶' },
+                { en: 'eat', zh: '吃' }, { en: 'taxi', zh: '出租车' }, { en: 'big', zh: '大' },
+                { en: 'computer', zh: '电脑' }, { en: 'TV', zh: '电视' }, { en: 'movie', zh: '电影' },
+                { en: 'thing', zh: '东西' }, { en: 'read', zh: '读' }, { en: 'sorry', zh: '对不起' },
+                { en: 'many', zh: '多' }, { en: 'son', zh: '儿子' }, { en: 'two', zh: '二' },
+                { en: 'restaurant', zh: '饭店' }, { en: 'airplane', zh: '飞机' }, { en: 'happy', zh: '高兴' },
+                { en: 'work', zh: '工作' }, { en: 'dog', zh: '狗' }, { en: 'Chinese', zh: '汉语' },
+                { en: 'good', zh: '好' }, { en: 'drink', zh: '喝' }, { en: 'very', zh: '很' },
+                { en: 'return', zh: '回' }, { en: 'can', zh: '会' }, { en: 'home', zh: '家' },
+                { en: 'today', zh: '今天' }, { en: 'nine', zh: '九' }, { en: 'open', zh: '开' },
+                { en: 'look', zh: '看' }, { en: 'see', zh: '看见' }, { en: 'come', zh: '来' },
+                { en: 'teacher', zh: '老师' }, { en: 'cold', zh: '冷' }, { en: 'six', zh: '六' },
+                { en: 'mom', zh: '妈妈' }, { en: 'buy', zh: '买' }, { en: 'cat', zh: '猫' },
+                { en: 'rice', zh: '米饭' }, { en: 'name', zh: '名字' }, { en: 'tomorrow', zh: '明天' },
+                { en: 'where', zh: '哪儿' }, { en: 'that', zh: '那' }, { en: 'you', zh: '你' },
+                { en: 'year', zh: '年' }, { en: 'daughter', zh: '女儿' }, { en: 'friend', zh: '朋友' },
+                { en: 'beautiful', zh: '漂亮' }, { en: 'apple', zh: '苹果' }, { en: 'seven', zh: '七' },
+                { en: 'money', zh: '钱' }, { en: 'please', zh: '请' }, { en: 'go', zh: '去' },
+                { en: 'hot', zh: '热' }, { en: 'person', zh: '人' }, { en: 'know', zh: '认识' },
+                { en: 'three', zh: '三' }, { en: 'store', zh: '商店' }, { en: 'up', zh: '上' },
+                { en: 'morning', zh: '上午' }, { en: 'few', zh: '少' }, { en: 'who', zh: '谁' },
+                { en: 'what', zh: '什么' }, { en: 'ten', zh: '十' }, { en: 'time', zh: '时候' },
+                { en: 'is', zh: '是' }, { en: 'water', zh: '水' }, { en: 'fruit', zh: '水果' },
+                { en: 'sleep', zh: '睡觉' }, { en: 'speak', zh: '说' }, { en: 'four', zh: '四' },
+                { en: 'he', zh: '他' }, { en: 'she', zh: '她' }, { en: 'too', zh: '太' },
+                { en: 'weather', zh: '天气' }, { en: 'listen', zh: '听' }, { en: 'classmate', zh: '同学' },
+                { en: 'I', zh: '我' }, { en: 'we', zh: '我们' }, { en: 'five', zh: '五' },
+                { en: 'like', zh: '喜欢' }, { en: 'down', zh: '下' }, { en: 'afternoon', zh: '下午' },
+                { en: 'rain', zh: '下雨' }, { en: 'now', zh: '现在' }, { en: 'want', zh: '想' },
+                { en: 'small', zh: '小' }, { en: 'write', zh: '写' }, { en: 'thanks', zh: '谢谢' },
+                { en: 'week', zh: '星期' }, { en: 'student', zh: '学生' }, { en: 'study', zh: '学习' },
+                { en: 'school', zh: '学校' }, { en: 'one', zh: '一' }, { en: 'clothes', zh: '衣服' },
+                { en: 'doctor', zh: '医生' }, { en: 'hospital', zh: '医院' }, { en: 'chair', zh: '椅子' },
+                { en: 'have', zh: '有' }, { en: 'month', zh: '月' }, { en: 'goodbye', zh: '再见' },
+                { en: 'at', zh: '在' }, { en: 'how', zh: '怎么' }, { en: 'this', zh: '这' },
+                { en: 'China', zh: '中国' }, { en: 'noon', zh: '中午' }, { en: 'live', zh: '住' },
+                { en: 'table', zh: '桌子' }, { en: 'character', zh: '字' }, { en: 'yesterday', zh: '昨天' },
+                { en: 'do', zh: '做' }, { en: 'sit', zh: '坐' }
+            ];
+
+            const gameWrapper = document.getElementById('gameWrapper');
+            const gameArea = document.getElementById('gameArea');
+            const applesContainer = document.getElementById('applesContainer');
+            const targetWordEl = document.getElementById('targetWord');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const correctDisplay = document.getElementById('correctDisplay');
+            const roundIndicator = document.getElementById('roundIndicator');
+            const hintText = document.getElementById('hintText');
+            const boxContainer = document.getElementById('boxContainer');
+            const boxZone = document.getElementById('boxZone');
+            const flashOverlay = document.getElementById('flashOverlay');
+            const setupPanel = document.getElementById('setupPanel');
+            const resultModal = document.getElementById('resultModal');
+            const customInputArea = document.getElementById('customInputArea');
+            const customVocabInput = document.getElementById('customVocabInput');
+            const btnStartGame = document.getElementById('btnStartGame');
+            const btnReplay = document.getElementById('btnReplay');
+            const btnBackToSetup = document.getElementById('btnBackToSetup');
+            const optionPreset = document.getElementById('optionPreset');
+            const optionCustom = document.getElementById('optionCustom');
+            const radioPreset = optionPreset.querySelector('input[type="radio"]');
+            const radioCustom = optionCustom.querySelector('input[type="radio"]');
+
+            const TOTAL_ROUNDS = 10;
+            const APPLE_COUNT = 7;
+            // ★ 加快掉落速度：最小600ms，最大1100ms（原来是1000-1600）
+            const FALL_DURATION_MIN = 600;
+            const FALL_DURATION_MAX = 1100;
+            // ★ 缩短轮间等待，节奏更快
+            const INTER_FALL_DELAY = 700;
+            const INITIAL_DELAY_MIN = 500;
+            const INITIAL_DELAY_MAX = 1000;
+
+            let vocabulary = [...HSK1_VOCABULARY];
+            let gameActive = false;
+            let currentRound = 0;
+            let totalScore = 0;
+            let correctCount = 0;
+            let targetWord = null;
+            let apples = [];
+            let fallQueue = [];
+            let currentQueueIndex = 0;
+            let fallingAppleIndex = -1;
+            let fallStartTime = 0;
+            let boxOpen = false;
+            let roundInProgress = false;
+            let roundLocked = false;
+            let reactionTimes = [];
+            let animationFrameId = null;
+            let roundTimeoutId = null;
+            let wobbleTimeoutId = null;
+            let boxAutoCloseTimeoutId = null;
+
+            radioPreset.addEventListener('change', () => {
+                optionPreset.classList.add('selected');
+                optionCustom.classList.remove('selected');
+                customInputArea.style.display = 'none';
+            });
+            radioCustom.addEventListener('change', () => {
+                optionCustom.classList.add('selected');
+                optionPreset.classList.remove('selected');
+                customInputArea.style.display = 'flex';
+            });
+            optionPreset.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') radioPreset.checked = true;
+                radioPreset.dispatchEvent(new Event('change'));
+            });
+            optionCustom.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') radioCustom.checked = true;
+                radioCustom.dispatchEvent(new Event('change'));
+            });
+
+            btnStartGame.addEventListener('click', () => {
+                if (radioCustom.checked) {
+                    const raw = customVocabInput.value.trim();
+                    if (!raw) { alert('请先输入自定义词语！'); return; }
+                    const parsed = parseCustomVocabulary(raw);
+                    if (parsed.length < APPLE_COUNT) {
+                        alert(`至少需要输入 ${APPLE_COUNT} 个词语才能生成选项！当前只有 ${parsed.length} 个有效词语。`);
+                        return;
+                    }
+                    vocabulary = parsed;
+                } else {
+                    vocabulary = [...HSK1_VOCABULARY];
+                }
+                setupPanel.style.display = 'none';
+                initGame();
+            });
+
+            function parseCustomVocabulary(raw) {
+                const lines = raw.split('\n').filter(l => l.trim());
+                const result = [];
+                for (const line of lines) {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const zh = parts[0].trim();
+                        const en = parts[1].trim();
+                        if (zh && en) result.push({ en, zh });
+                    }
+                }
+                return result;
+            }
+
+            function initGame() {
+                currentRound = 0;
+                totalScore = 0;
+                correctCount = 0;
+                reactionTimes = [];
+                gameActive = true;
+                roundInProgress = false;
+                roundLocked = false;
+                fallingAppleIndex = -1;
+                fallQueue = [];
+                currentQueueIndex = 0;
+                boxOpen = false;
+                updateBoxVisual();
+                updateScoreDisplay();
+                updateCorrectDisplay();
+                updateRoundIndicator();
+                targetWordEl.textContent = '—';
+                hintText.style.opacity = '1';
+                flashOverlay.classList.remove('good', 'bad');
+                applesContainer.innerHTML = '';
+                apples = [];
+                resultModal.style.display = 'none';
+                setupPanel.style.display = 'none';
+                boxContainer.classList.remove('open');
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                if (roundTimeoutId) clearTimeout(roundTimeoutId);
+                if (wobbleTimeoutId) clearTimeout(wobbleTimeoutId);
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                animationFrameId = null;
+                startNewRound();
+            }
+
+            function startNewRound() {
+                if (currentRound >= TOTAL_ROUNDS) { endGame(); return; }
+                roundInProgress = false;
+                roundLocked = false;
+                fallingAppleIndex = -1;
+                fallQueue = [];
+                currentQueueIndex = 0;
+                boxOpen = false;
+                updateBoxVisual();
+                boxContainer.classList.remove('open');
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                boxAutoCloseTimeoutId = null;
+                flashOverlay.classList.remove('good', 'bad');
+                hintText.style.opacity = '1';
+                applesContainer.innerHTML = '';
+                apples = [];
+                currentRound++;
+                updateRoundIndicator();
+
+                const vocabPool = [...vocabulary];
+                const targetIndex = Math.floor(Math.random() * vocabPool.length);
+                targetWord = vocabPool[targetIndex];
+                targetWordEl.textContent = targetWord.en;
+
+                const usedZh = new Set();
+                usedZh.add(targetWord.zh);
+                const correctAppleData = { zh: targetWord.zh, isCorrect: true };
+                const distractors = [];
+                const otherVocabs = vocabPool.filter((v, i) => i !== targetIndex && !usedZh.has(v.zh));
+                shuffleArray(otherVocabs);
+                for (let i = 0; i < Math.min(APPLE_COUNT - 1, otherVocabs.length); i++) {
+                    if (!usedZh.has(otherVocabs[i].zh)) {
+                        distractors.push({ zh: otherVocabs[i].zh, isCorrect: false });
+                        usedZh.add(otherVocabs[i].zh);
+                    }
+                }
+                if (distractors.length < APPLE_COUNT - 1) {
+                    const allOthers = vocabPool.filter(v => !usedZh.has(v.zh));
+                    shuffleArray(allOthers);
+                    for (const v of allOthers) {
+                        if (distractors.length >= APPLE_COUNT - 1) break;
+                        if (!usedZh.has(v.zh)) {
+                            distractors.push({ zh: v.zh, isCorrect: false });
+                            usedZh.add(v.zh);
+                        }
+                    }
+                }
+                while (distractors.length < APPLE_COUNT - 1) {
+                    const fallback = vocabPool[Math.floor(Math.random() * vocabPool.length)];
+                    if (!usedZh.has(fallback.zh) || distractors.length >= vocabPool.length - 1) {
+                        distractors.push({ zh: fallback.zh + ' ', isCorrect: false });
+                        usedZh.add(fallback.zh + ' ');
+                    }
+                }
+
+                const allAppleData = [correctAppleData, ...distractors.slice(0, APPLE_COUNT - 1)];
+                shuffleArray(allAppleData);
+
+                const treeArea = document.getElementById('treeArea');
+                const treeAreaRect = treeArea.getBoundingClientRect();
+                const containerWidth = treeAreaRect.width;
+                const appleWidth = containerWidth < 400 ? 42 : 56;
+                const totalWidth = APPLE_COUNT * appleWidth + (APPLE_COUNT - 1) * 18;
+                const startX = (containerWidth - totalWidth) / 2;
+                const treeTopOffset = containerWidth < 400 ? 50 : 65;
+
+                for (let i = 0; i < allAppleData.length; i++) {
+                    const data = allAppleData[i];
+                    const x = startX + i * (appleWidth + 18);
+                    const y = treeTopOffset + (i % 2 === 0 ? 0 : 20) + Math.sin(i * 1.2) * 10;
+                    const appleEl = document.createElement('div');
+                    appleEl.className = 'apple';
+                    appleEl.style.left = x + 'px';
+                    appleEl.style.top = y + 'px';
+                    appleEl.style.width = appleWidth + 'px';
+                    appleEl.style.height = (appleWidth * 1.1) + 'px';
+                    appleEl.innerHTML = `<span class="apple-text">${data.zh}</span>`;
+                    appleEl.setAttribute('data-index', i);
+                    applesContainer.appendChild(appleEl);
+
+                    apples.push({
+                        zh: data.zh,
+                        x, y,
+                        isCorrect: data.isCorrect,
+                        isFalling: false,
+                        fallStartY: y,
+                        fallSpeed: 0,
+                        element: appleEl,
+                        originalX: x,
+                        originalY: y,
+                    });
+                }
+
+                // ★ 构建完全随机的掉落队列
+                fallQueue = Array.from({ length: apples.length }, (_, i) => i);
+                shuffleArray(fallQueue); // 每次打乱，确保顺序随机
+                currentQueueIndex = 0;
+
+                const delayBeforeFall = INITIAL_DELAY_MIN + Math.random() * (INITIAL_DELAY_MAX - INITIAL_DELAY_MIN);
+                roundTimeoutId = setTimeout(() => {
+                    if (!gameActive || roundLocked) return;
+                    triggerNextFall();
+                }, delayBeforeFall);
+                roundInProgress = true;
+            }
+
+            function triggerNextFall() {
+                if (!gameActive || roundLocked || !roundInProgress) return;
+                if (currentQueueIndex >= fallQueue.length) {
+                    finishRound(false);
+                    return;
+                }
+                const idx = fallQueue[currentQueueIndex];
+                currentQueueIndex++;
+                const apple = apples[idx];
+                if (!apple || apple.isFalling) return;
+
+                apple.element.classList.add('wobble');
+                wobbleTimeoutId = setTimeout(() => {
+                    apple.element.classList.remove('wobble');
+                    startFallingApple(idx);
+                }, 400);
+            }
+
+            function startFallingApple(idx) {
+                if (!gameActive || roundLocked) return;
+                const apple = apples[idx];
+                if (!apple || apple.isFalling) return;
+
+                apple.isFalling = true;
+                fallingAppleIndex = idx;
+                fallStartTime = performance.now();
+                apple.fallStartY = apple.y;
+                const treeArea = document.getElementById('treeArea');
+                const boxZoneEl = boxZone;
+                const treeRect = treeArea.getBoundingClientRect();
+                const boxRect = boxZoneEl.getBoundingClientRect();
+                const fallDistance = boxRect.top - treeRect.top - apple.y - (apple.element.offsetHeight / 2);
+                const fallDuration = FALL_DURATION_MIN + Math.random() * (FALL_DURATION_MAX - FALL_DURATION_MIN);
+                apple.fallSpeed = fallDistance / fallDuration;
+                apple.element.classList.add('falling');
+                hintText.style.opacity = '0.3';
+
+                if (!animationFrameId) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                }
+            }
+
+            function gameLoop(timestamp) {
+                if (!gameActive) { animationFrameId = null; return; }
+                let anyFalling = false;
+                for (let i = 0; i < apples.length; i++) {
+                    const apple = apples[i];
+                    if (apple.isFalling) {
+                        anyFalling = true;
+                        const elapsed = timestamp - fallStartTime;
+                        apple.y = apple.fallStartY + apple.fallSpeed * elapsed;
+                        apple.element.style.top = apple.y + 'px';
+
+                        const boxZoneEl = boxZone;
+                        const treeArea = document.getElementById('treeArea');
+                        const boxRect = boxZoneEl.getBoundingClientRect();
+                        const treeRect = treeArea.getBoundingClientRect();
+                        const appleBottom = treeRect.top + apple.y + apple.element.offsetHeight;
+                        const boxTop = boxRect.top + 8;
+                        const boxBottom = boxRect.bottom - 8;
+
+                        if (appleBottom >= boxTop && appleBottom <= boxBottom + 15) {
+                            if (boxOpen && !roundLocked) {
+                                catchApple(i, timestamp);
+                                anyFalling = false;
+                                break;
+                            } else if (appleBottom > boxBottom + 10 && !roundLocked) {
+                                missApple(i);
+                                anyFalling = false;
+                                break;
+                            }
+                        } else if (appleBottom > boxBottom + 30 && !roundLocked) {
+                            missApple(i);
+                            anyFalling = false;
+                            break;
+                        }
+                    }
+                }
+                if (anyFalling && gameActive) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                } else {
+                    animationFrameId = null;
+                }
+            }
+
+            function catchApple(idx, timestamp) {
+                roundLocked = true;
+                const apple = apples[idx];
+                const reactionTime = timestamp - fallStartTime;
+
+                if (apple.isCorrect) {
+                    reactionTimes.push(reactionTime);
+                    const reactionSec = reactionTime / 1000;
+                    let speedBonus = Math.max(0, Math.round(200 - reactionSec * 150));
+                    speedBonus = Math.min(speedBonus, 200);
+                    const roundScore = 100 + speedBonus;
+                    totalScore += roundScore;
+                    correctCount++;
+                    updateScoreDisplay();
+                    updateCorrectDisplay();
+                    flashOverlay.classList.add('good');
+                    setTimeout(() => flashOverlay.classList.remove('good'), 250);
+                    spawnParticles(apple, true);
+                    finishRound(true);
+                } else {
+                    flashOverlay.classList.add('bad');
+                    setTimeout(() => flashOverlay.classList.remove('bad'), 250);
+                    spawnParticles(apple, false);
+                    scheduleNextFallInRound();
+                }
+                apple.element.style.opacity = '0';
+                apple.element.style.transform = 'scale(0.3)';
+                apple.element.style.transition = 'all 0.3s ease';
+                apple.isFalling = false;
+                fallingAppleIndex = -1;
+                hintText.style.opacity = '1';
+                setTimeout(() => {
+                    boxOpen = false;
+                    updateBoxVisual();
+                    boxContainer.classList.remove('open');
+                }, 300);
+            }
+
+            function missApple(idx) {
+                roundLocked = true;
+                const apple = apples[idx];
+                if (apple.isCorrect) {
+                    flashOverlay.classList.add('bad');
+                    setTimeout(() => flashOverlay.classList.remove('bad'), 250);
+                    finishRound(false);
+                } else {
+                    flashOverlay.style.background = 'rgba(255,255,255,0.2)';
+                    flashOverlay.style.opacity = '1';
+                    setTimeout(() => {
+                        flashOverlay.style.opacity = '0';
+                        flashOverlay.style.background = '';
+                    }, 200);
+                    scheduleNextFallInRound();
+                }
+                apple.element.style.opacity = '0';
+                apple.element.style.transform = 'translateY(40px) scale(0.5)';
+                apple.element.style.transition = 'all 0.4s ease';
+                apple.isFalling = false;
+                fallingAppleIndex = -1;
+                hintText.style.opacity = '1';
+                updateCorrectDisplay();
+                setTimeout(() => {
+                    boxOpen = false;
+                    updateBoxVisual();
+                    boxContainer.classList.remove('open');
+                }, 300);
+            }
+
+            function scheduleNextFallInRound() {
+                roundLocked = false;
+                if (roundTimeoutId) clearTimeout(roundTimeoutId);
+                roundTimeoutId = setTimeout(() => {
+                    if (gameActive && roundInProgress && !roundLocked) {
+                        triggerNextFall();
+                    }
+                }, INTER_FALL_DELAY);
+            }
+
+            function finishRound(success) {
+                roundInProgress = false;
+                roundLocked = true;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                if (roundTimeoutId) clearTimeout(roundTimeoutId);
+                if (wobbleTimeoutId) clearTimeout(wobbleTimeoutId);
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                for (const apple of apples) {
+                    if (apple.isFalling) {
+                        apple.element.style.opacity = '0';
+                        apple.element.style.transform = 'translateY(40px) scale(0.3)';
+                        apple.element.style.transition = 'all 0.4s ease';
+                        apple.isFalling = false;
+                    }
+                }
+                fallingAppleIndex = -1;
+                boxOpen = false;
+                updateBoxVisual();
+                boxContainer.classList.remove('open');
+                hintText.style.opacity = '1';
+
+                roundTimeoutId = setTimeout(() => {
+                    if (gameActive && currentRound < TOTAL_ROUNDS) {
+                        startNewRound();
+                    } else if (currentRound >= TOTAL_ROUNDS) {
+                        endGame();
+                    }
+                }, 1000);
+            }
+
+            function updateBoxVisual() {
+                boxContainer.classList.toggle('open', boxOpen);
+            }
+
+            function openBox() {
+                if (!gameActive || roundLocked || !roundInProgress || fallingAppleIndex < 0) return;
+                if (boxOpen) return;
+                boxOpen = true;
+                updateBoxVisual();
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                boxAutoCloseTimeoutId = setTimeout(() => {
+                    boxOpen = false;
+                    updateBoxVisual();
+                }, 500);
+            }
+
+            function spawnParticles(apple, isGood) {
+                const treeArea = document.getElementById('treeArea');
+                const treeRect = treeArea.getBoundingClientRect();
+                const appleEl = apple.element;
+                const appleRect = appleEl.getBoundingClientRect();
+                const cx = appleRect.left - treeRect.left + appleRect.width / 2;
+                const cy = appleRect.top - treeRect.top + appleRect.height / 2;
+                const emojis = isGood ? ['⭐','✨','💚','🎉','👏','💯','🌟'] : ['❌','💨','😅'];
+                for (let i = 0; i < (isGood ? 10 : 4); i++) {
+                    const particle = document.createElement('span');
+                    particle.className = 'particle';
+                    particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    particle.style.left = cx + 'px';
+                    particle.style.top = cy + 'px';
+                    particle.style.setProperty('--px', (Math.random() - 0.5) * 120 + 'px');
+                    particle.style.setProperty('--py', (Math.random() * -80 - 20) + 'px');
+                    particle.style.animationDuration = (0.5 + Math.random() * 0.6) + 's';
+                    treeArea.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
+                }
+            }
+
+            function updateScoreDisplay() { scoreDisplay.textContent = totalScore; }
+            function updateCorrectDisplay() { correctDisplay.textContent = correctCount; }
+            function updateRoundIndicator() { roundIndicator.textContent = `第 ${currentRound} / ${TOTAL_ROUNDS} 轮`; }
+
+            function endGame() {
+                gameActive = false;
+                roundInProgress = false;
+                roundLocked = true;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                if (roundTimeoutId) clearTimeout(roundTimeoutId);
+                if (wobbleTimeoutId) clearTimeout(wobbleTimeoutId);
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                animationFrameId = null;
+                boxOpen = false;
+                updateBoxVisual();
+                boxContainer.classList.remove('open');
+                hintText.style.opacity = '1';
+                flashOverlay.classList.remove('good', 'bad');
+                targetWordEl.textContent = '—';
+                applesContainer.innerHTML = '';
+                apples = [];
+                fallingAppleIndex = -1;
+                fallQueue = [];
+
+                const accuracy = TOTAL_ROUNDS > 0 ? Math.round((correctCount / TOTAL_ROUNDS) * 100) : 0;
+                const avgReaction = reactionTimes.length > 0 ?
+                    Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length) : null;
+
+                let grade = '', icon = '';
+                if (accuracy >= 90) { grade = '🏅 太棒了！'; icon = '🏆'; }
+                else if (accuracy >= 70) { grade = '👍 很不错！'; icon = '🌟'; }
+                else if (accuracy >= 50) { grade = '📚 继续加油！'; icon = '💪'; }
+                else { grade = '🌱 多多练习！'; icon = '📖'; }
+
+                document.getElementById('resultIcon').textContent = icon;
+                document.getElementById('resultGrade').textContent = grade;
+                document.getElementById('resultScore').textContent = totalScore;
+                document.getElementById('resultCorrect').textContent = `${correctCount}/${TOTAL_ROUNDS}`;
+                document.getElementById('resultAccuracy').textContent = accuracy + '%';
+                document.getElementById('resultAvgSpeed').textContent = avgReaction ?
+                    `⚡ 平均反应速度：${(avgReaction/1000).toFixed(2)} 秒` : '⚡ 没有成功接住任何苹果';
+                resultModal.style.display = 'flex';
+            }
+
+            function handleOpenBox(e) {
+                if (!gameActive || roundLocked || !roundInProgress || fallingAppleIndex < 0) return;
+                e.preventDefault();
+                openBox();
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' || e.key === ' ' || e.keyCode === 32) {
+                    e.preventDefault();
+                    handleOpenBox(e);
+                }
+            });
+            gameArea.addEventListener('mousedown', (e) => { handleOpenBox(e); });
+            gameArea.addEventListener('touchstart', (e) => { handleOpenBox(e); }, { passive: false });
+            gameArea.addEventListener('dblclick', (e) => { e.preventDefault(); });
+            gameArea.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+
+            btnReplay.addEventListener('click', () => { resultModal.style.display = 'none'; initGame(); });
+            btnBackToSetup.addEventListener('click', () => {
+                resultModal.style.display = 'none';
+                gameActive = false;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                if (roundTimeoutId) clearTimeout(roundTimeoutId);
+                if (wobbleTimeoutId) clearTimeout(wobbleTimeoutId);
+                if (boxAutoCloseTimeoutId) clearTimeout(boxAutoCloseTimeoutId);
+                animationFrameId = null;
+                setupPanel.style.display = 'flex';
+                applesContainer.innerHTML = '';
+                apples = [];
+                fallingAppleIndex = -1;
+                fallQueue = [];
+                boxOpen = false;
+                updateBoxVisual();
+                boxContainer.classList.remove('open');
+                targetWordEl.textContent = '—';
+                scoreDisplay.textContent = '0';
+                correctDisplay.textContent = '0';
+                roundIndicator.textContent = `第 1 / ${TOTAL_ROUNDS} 轮`;
+                hintText.style.opacity = '1';
+                flashOverlay.classList.remove('good', 'bad');
+                currentRound = 0; totalScore = 0; correctCount = 0; reactionTimes = [];
+            });
+
+            function shuffleArray(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+            }
+
+            setupPanel.style.display = 'flex';
+            gameActive = false;
+            updateBoxVisual();
+            boxContainer.classList.remove('open');
+            targetWordEl.textContent = '—';
+            scoreDisplay.textContent = '0';
+            correctDisplay.textContent = '0';
+            roundIndicator.textContent = `第 1 / ${TOTAL_ROUNDS} 轮`;
+
+            console.log('🍎 苹果接龙游戏已更新！');
+            console.log('   - 掉落速度大幅提升（600-1100ms）');
+            console.log('   - 每轮苹果掉落顺序完全随机');
+        })();
+    </script>
+</body>
+</html>
